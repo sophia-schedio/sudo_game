@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ときメタ 〜Code × Love〜</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a1a;
+            font-family: 'Courier New', 'MS Gothic', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .terminal {
+            max-width: 780px;
+            width: 100%;
+            background: #0d0d0d;
+            border-radius: 20px;
+            padding: 28px 30px 34px;
+            box-shadow: 0 0 40px rgba(255, 100, 150, 0.08), 0 0 80px rgba(255, 100, 150, 0.04);
+            border: 1px solid #2a2a2a;
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #222;
+            margin-bottom: 18px;
+        }
+        .terminal-header .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .terminal-header .title {
+            color: #888;
+            font-size: 13px;
+            margin-left: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ---- 色クラス（PythonのCOLORSに対応） ---- */
+        .text-red { color: #ff6b6b; }
+        .text-pink { color: #ff8a9f; }
+        .text-cyan { color: #6bc5d0; }
+        .text-green { color: #69db7c; }
+        .text-yellow { color: #ffd93d; }
+        .text-gray { color: #888; }
+        .text-bold { font-weight: bold; }
+        .text-reset { color: #d4d4d4; }
+
+        /* ---- 表示エリア ---- */
+        .message-area {
+            background: #111;
+            border-radius: 12px;
+            padding: 18px 20px;
+            min-height: 280px;
+            max-height: 420px;
+            overflow-y: auto;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #d4d4d4;
+            border: 1px solid #222;
+            margin-bottom: 16px;
+            font-family: 'Courier New', 'MS Gothic', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .message-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        .message-area::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        .message-area::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 8px;
+        }
+
+        /* ---- ステータス ---- */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #aaa;
+            padding: 8px 4px 14px 4px;
+            border-bottom: 1px solid #1e1e1e;
+            margin-bottom: 14px;
+        }
+        .status-bar .affection {
+            color: #ff8a9f;
+            font-weight: bold;
+        }
+        .status-bar .scene {
+            color: #6bc5d0;
+        }
+
+        /* ---- 選択肢ボタン ---- */
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .choices button {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 12px 10px;
+            font-size: 13px;
+            font-family: 'Courier New', 'MS Gothic', monospace;
+            color: #d4d4d4;
+            cursor: pointer;
+            transition: 0.15s;
+            text-align: left;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .choices button:hover {
+            background: #2a2a2a;
+            border-color: #ff8a9f;
+            transform: scale(0.98);
+        }
+        .choices button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+            border-color: #333;
+        }
+        .choices button .num {
+            color: #ff8a9f;
+            font-weight: bold;
+            margin-right: 6px;
+        }
+
+        /* ---- ハート表示 ---- */
+        .heart-line {
+            text-align: center;
+            font-size: 18px;
+            color: #ff8a9f;
+            letter-spacing: 4px;
+            padding: 4px 0 6px;
+            opacity: 0.8;
+        }
+
+        /* ---- リセットボタン ---- */
+        .reset-area {
+            text-align: center;
+            margin-top: 16px;
+        }
+        .reset-area button {
+            background: transparent;
+            border: 1px solid #333;
+            border-radius: 40px;
+            padding: 8px 28px;
+            font-size: 13px;
+            font-family: 'Courier New', 'MS Gothic', monospace;
+            color: #888;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .reset-area button:hover {
+            border-color: #666;
+            color: #ccc;
+        }
+
+        /* ---- レスポンシブ ---- */
+        @media (max-width: 480px) {
+            .terminal { padding: 18px 14px 24px; }
+            .choices { grid-template-columns: 1fr; }
+            .message-area { min-height: 200px; font-size: 14px; }
+            .choices button { font-size: 12px; padding: 10px 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="terminal" id="app">
+    <!-- ヘッダー -->
+    <div class="terminal-header">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="title">⚡ メタ子のときメモ v2.0</span>
+    </div>
+
+    <!-- ハート -->
+    <div class="heart-line" id="heartDisplay">❤️ ══════════════════ ❤️</div>
+
+    <!-- ステータス -->
+    <div class="status-bar">
+        <span class="scene" id="sceneDisplay">Act 1</span>
+        <span class="affection" id="affectionDisplay">❤️ 好感度: 50 / 100</span>
+        <span id="statusDisplay" style="color:#888;">ニュートラル</span>
+    </div>
+
+    <!-- メッセージ表示エリア -->
+    <div class="message-area" id="messageArea">
+        ⚡ システム起動: 恋愛ドラマ・クリア可能バランス版<br>
+        ようこそ、恋コードの世界へ。sudoになってメタ子を恋におとしましょう。<br>
+        あなたの選択が、物語を変える。
+    </div>
+
+    <!-- 選択肢ボタン -->
+    <div class="choices" id="choicesArea"></div>
+
+    <!-- リセット -->
+    <div class="reset-area">
+        <button id="resetBtn">🔄 最初からやり直す</button>
+    </div>
+</div>
+
+<script>
+// ============================================================
+//  JavaScript移植版：ときメタ
+// ============================================================
+
+(function() {
+    "use strict";
+
+    // ---------- DOM 参照 ----------
+    const messageArea = document.getElementById('messageArea');
+    const choicesArea = document.getElementById('choicesArea');
+    const heartDisplay = document.getElementById('heartDisplay');
+    const sceneDisplay = document.getElementById('sceneDisplay');
+    const affectionDisplay = document.getElementById('affectionDisplay');
+    const statusDisplay = document.getElementById('statusDisplay');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // ---------- ゲーム状態 ----------
+    let state = {
+        affection: 50,
+        sceneCount: 0,
+        rescueUsed: false,
+        forcePush: false,
+        gameOver: false,
+        turn: 0,
+        maxTurns: 30,
+        ended: false,
+    };
+
+    // メッセージキュー（1文字ずつ表示用）
+    let messageQueue = [];
+    let isPrinting = false;
+    let printTimer = null;
+    let currentPrintResolve = null;
+
+    // ---------- カラー変換 ----------
+    const colorMap = {
+        'red': 'text-red',
+        'pink': 'text-pink',
+        'cyan': 'text-cyan',
+        'green': 'text-green',
+        'yellow': 'text-yellow',
+        'gray': 'text-gray',
+        'bold': 'text-bold',
+        'reset': 'text-reset',
+    };
+
+    function applyColor(text, color) {
+        const cls = colorMap[color] || 'text-reset';
+        return `<span class="${cls}">${text}</span>`;
+    }
+
+    // ---------- メッセージ表示（print_slowの再現） ----------
+    function printSlow(text, delay = 30, color = 'reset') {
+        return new Promise((resolve) => {
+            if (isPrinting) {
+                // 現在の印刷が終わるまで待つ
+                const check = () => {
+                    if (!isPrinting) {
+                        _doPrintSlow(text, delay, color, resolve);
+                    } else {
+                        setTimeout(check, 50);
+                    }
+                };
+                check();
+                return;
+            }
+            _doPrintSlow(text, delay, color, resolve);
+        });
+    }
+
+    function _doPrintSlow(text, delay, color, resolve) {
+        isPrinting = true;
+        const cls = colorMap[color] || 'text-reset';
+        const span = document.createElement('span');
+        span.className = cls;
+        span.textContent = '';
+        messageArea.appendChild(span);
+
+        let index = 0;
+        const chars = [...text];
+
+        // 既存の改行を維持するため、最後に改行を入れたい場合は別途処理
+        function printNext() {
+            if (index >= chars.length) {
+                // 改行を追加（表示の区切り）
+                const br = document.createElement('br');
+                messageArea.appendChild(br);
+                isPrinting = false;
+                messageArea.scrollTop = messageArea.scrollHeight;
+                resolve();
+                return;
+            }
+            const ch = chars[index];
+            if (ch === '\n') {
+                // 改行はそのまま改行要素を追加
+                const br = document.createElement('br');
+                messageArea.appendChild(br);
+                index++;
+                // 改行後も同じスタイルを維持
+                printNext();
+                return;
+            }
+            span.textContent += ch;
+            index++;
+            messageArea.scrollTop = messageArea.scrollHeight;
+            const nextDelay = (ch === '。' || ch === '！' || ch === '？' || ch === '、') ? delay * 2 : delay;
+            printTimer = setTimeout(printNext, nextDelay);
+        }
+
+        printNext();
+    }
+
+    // 即時メッセージ追加（通常のテキスト）
+    function addMessage(text, color = 'reset') {
+        const cls = colorMap[color] || 'text-reset';
+        const span = document.createElement('span');
+        span.className = cls;
+        span.textContent = text;
+        messageArea.appendChild(span);
+        const br = document.createElement('br');
+        messageArea.appendChild(br);
+        messageArea.scrollTop = messageArea.scrollHeight;
+    }
+
+    // クリア
+    function clearMessages() {
+        messageArea.innerHTML = '';
+    }
+
+    // ---------- ハート表示 ----------
+    function showHeart() {
+        heartDisplay.textContent = '❤️ ══════════════════ ❤️';
+    }
+
+    // ---------- 状態更新 ----------
+    function updateStatus() {
+        const s = state;
+        sceneDisplay.textContent = `Act ${s.sceneCount}`;
+        affectionDisplay.textContent = `❤️ 好感度: ${s.affection} / 100`;
+
+        let statusText = '';
+        if (s.affection >= 85) statusText = '💕 完全にデレている (トゥルールート目前)';
+        else if (s.affection >= 65) statusText = '🌸 かなり意識している (好印象)';
+        else if (s.affection >= 40) statusText = '😐 ニュートラル (まだチャンスあり)';
+        else if (s.affection >= 20) statusText = '😨 距離を置いている (要アプローチ)';
+        else statusText = '⚠️ 冷たい…けど、まだ諦めるな！';
+        statusDisplay.textContent = statusText;
+    }
+
+    // ---------- アクションプール（PythonのACTION_POOLを完全移植） ----------
+    const ACTION_POOL = [
+        // ===== 超プラス =====
+        ["「好きだ。ずっと前から好きだったんだ」と真剣に告白する", "メタ子は固まった。…そして、「……私もだよ。」と涙声で返した。", 6],
+        ["メタ子が3日間悩んでいたバグを、5分で解決してみせる", "「…え、なにこの人！ すてき！？」 メタ子の目がキラキラしている。", 5],
+        ["「一緒に人生のコードを書かないか？」とプロポーズする", "「…それ、プロポーズ？ …ふざけてるよね？ …でも、ちょっと嬉しい。」", 6],
+        // ===== 中プラス =====
+        ["温かいコーヒーを差し出す", "「…ありがと。そういう気遣い、すごく染みるよ。」 目が合って、二人で微笑んだ。", 3],
+        ["「このプロジェクト、君のおかげでここまで来たよ」と感謝する", "「そう言ってもらえると、頑張った甲斐があるな。」 嬉しそうに画面を見つめた。", 3],
+        // ===== 中マイナス =====
+        ["無言で自分の作業に没頭し、メタ子を完全に無視する", "「……。」 メタ子は何か言いたそうにしたが、結局何も言わずに背を向けた。", -3],
+        ["「それ、さっきのコード、もっと効率的に書けるよ」と上から目線で言う", "「…へえ、そうなんだ。じゃあ、あんたが書き直せば？」 かなりムッとしている。", -3],
+        ["メタ子の過去の失敗談を突然蒸し返す", "「…なんで今それ言うの？ 傷つけるのが趣味？」 空気が凍りついた。", -3],
+        // ===== 超マイナス =====
+        ["「君のコード、正直イマイチだね」とバッサリ切り捨てる", "「……そう。ごめんね、こんなコードで。もう二度と見せないから。」 完全に心を閉ざした。", -5],
+        ["「実は彼女がいるんだ」と冗談で言ってみる", "「…は？ そうなんだ。じゃあ、私なんかに関わらないでくれる？」 氷のような目つき。", -5],
+        ["「メタ子って名前、ダサくない？」と嘲笑う", "「……帰ってください。」 この一言で、空気が完全に終わった。", -5],
+        ["他の同僚の女性を「あの子、可愛いよね」と褒める", "「…へえ、そういうのが好きなんだ。じゃあ、あの子のところに行けば？」 完全に冷めた。", -4],
+        // ===== 標準 +8〜+12 =====
+        ["「好きだ。ずっと前から好きだったんだ」と真剣に告白する", "メタ子はしばらく固まった。そして、うつむきながら「…私もだよ。でも、今まで言えなかった。」と小さな声で返した。", 12],
+        ["メタ子が3日間悩んでいたバグを、5分で解決してみせる", "「…まさか、ここまでとは思わなかった。あなたのそういうところ、尊敬してる。」 目をまっすぐ見つめてきた。", 10],
+        ["「一緒に人生のコードを書かないか？」とプロポーズする", "「…それ、プロポーズ？ …笑えるけど、悪くないね。……ちょっと考えてみる。」 真っ赤になりながらも、逃げなかった。", 11],
+        ["メタ子の書いた複雑なアルゴリズムを「完璧だ」と称賛する", "「…本当にそう思う？ …ありがとう。そう言ってもらえると、報われる気がする。」 嬉しそうに微笑んだ。", 8],
+        // ===== 標準 -8〜-12 =====
+        ["「君のコード、正直イマイチだね」とバッサリ切り捨てる", "「……そう。ごめんね、こんなコードで。じゃあ、もう見せない。」 完全に心を閉ざした。", -11],
+        ["「実は彼女がいるんだ」と冗談で言ってみる", "「…は？ そうなんだ。じゃあ、私にかまわないでくれる？」 氷のような目つきで、机を離れた。", -10],
+        ["メタ子の過去の失敗を「あの時はひどかったね」と笑いながら蒸し返す", "「…なんで今それ言うの？ 笑い事じゃないんだけど。」 明らかに不機嫌になった。", -9],
+        ["他の同僚の女性を「あの子、可愛いよね」と本気で褒める", "「…へえ、そういうのが好きなんだ。じゃあ、あの子のところに行けば？」 冷たい口調で返された。", -12],
+        ["「メタ子って名前、ダサくない？」と本気で言ってみる", "「……帰ってください。」 その一言で、会話は終わった。", -10],
+        // ===== 一桁変動 =====
+        ["温かいコーヒーを差し出す", "「…ありがと。そういう気遣い、嬉しいよ。」 少しだけ表情が和らいだ。", 5],
+        ["無言で自分の作業に没頭し、メタ子を完全に無視する", "「……。」 メタ子は何か言いたそうにしたが、結局何も言わずに背を向けた。", -4],
+        ["「それ、さっきのコード、もっと効率的に書けるよ」と軽く言う", "「…へえ、そうなんだ。教えてくれる？」 やや挑戦的な目つき。", -3],
+        ["「今日の君、ちょっと疲れてる？」と気遣う", "「…よくわかったね。ちょっとだけ、話を聞いてもらえる？」 心を開きかけた。", 6],
+        // ===== ±30 大逆転 =====
+        ["「この会社、辞めようと思うんだ」と唐突に告げる", "「…え？ それ、どういう意味？」 メタ子の顔が一瞬で曇った。「…私には、なんも言ってくれないんだね。」 完全に距離を置かれた。", -30],
+        ["「メタ子、俺の人生のパートナーになってくれないか？」と指輪を取り出す", "メタ子は目を大きく見開き、しばらく固まった。「…うん。私でよければ。」 ", 30],
+        ["「実は、君のことずっと利用してたんだ」と冷たく言い放つ", "メタ子は青ざめ、机の上の書類を全て床に落とした。「……そうだったんだ。もう、何も言わないで。」 立ち去ろうとした。", -30],
+        // ===== 追加1：終電ネタ =====
+        ["終電がなくなったので、メタ子のためにホームディレクトリを作る", "「…え、私のための…ホーム？ それって、『帰る場所』ってこと？ ……ありがとう。今夜、帰れなくなったけど、ここに居場所があるなら、それでいい。」 目が潤んだ。", 12],
+        ["メタ子の環境変数に `LOVE=true` をこっそり追加する", "「ねえ、これ何？ `LOVE=true` って…！なんでやねん。 もう、そんなことしなくても、最初から true だよ。」 ノリツッコミ全開で、嬉しそうに笑った。", 9],
+        ["「おやすみ」の代わりに `shutdown -h now` と打ち込む", "「…それ、シャットダウンじゃん。でも、『今すぐ』じゃなくて『一緒にいる間はスリープにしないで』って意味だよね？」 優しく受け止めてくれた。", 8],
+        ["メタ子のデスクトップのアイコンを、コードで一瞬で整頓してあげる", "「…すごい整理整頓！ そういう細かい気遣い、めっちゃ嬉しい。デスクトップだけでなく、心の中も整理してもらえた気分。」", 10],
+        ["「.metarc」設定ファイルを一緒に編集しながら、二人だけのエイリアスを定義する", "「`alias metako='love'` って…毎回ターミナル開くたびに君のこと思い出しちゃうじゃん。」 照れながらも保存した。", 11],
+        ["メタ子の変数名を全部 `metako_love_*` にリファクタリングする", "「ちょ、ちょっと！ これ、コードレビューで通らないって！ …でも、こんなに自分のこと考えてくれたの、初めてだよ。」 半分呆れ、半分感動。", 10],
+        ["「終電ないの？ じゃあ俺は先に帰るね」と1人で帰ろうとする", "「……そう。わかった。じゃあ、お疲れさま。…（本当は『行かないで』って言いたかったけど、言えなかった。）」 背中が寂しそうだった。", -10],
+        ["`rm -rf /home/metako` と冗談で打ち込む仕草をする（実行はしない）", "「…っ！！ それ、やめて！ ……冗談でも、私のホーム消すとか言わないで。心臓止まるかと思った。」 本気で青ざめて、ちょっと怒ってる。", -12],
+        // ===== 追加2：恋人特権 =====
+        ["恋人特権で、メタ子だけパスワードなしで全サーバーに通してあげる", "「…それ、セキュリティ的にやばくない？ ……でも、君が『特別』って言ってくれてるみたいで、ちょっと嬉しい。」 ニヤリとしながら、秘密の鍵を受け取った。", 12],
+        ["メタ子のために `.bashrc` に `alias love-you='echo \"I love you\"'` を仕込む", "「…ターミナル起動するたびに『I love you』って出てくるの？ それ、照れるけど…でも、毎日思い出せるのはいいね。」", 10],
+        ["「sudo しなくていいよ。君には全権限をあげる」と本気で言う", "「…root権限をくれるってこと？ それって、私のこと、完全に信頼してるってことだよね？ ……ありがとう。絶対に裏切らない。」 真剣な目で見つめ返した。", 14],
+        ["メタ子のログイン履歴をこっそり見て、「今日も頑張ったね」とメッセージを残す", "「…え、ログ見てたの？ ちょっと怖いけど…でも、気にかけてくれてるんだなって思ったら、悪い気はしない。」", 8],
+        ["「このプロジェクトが終わったら、君に一生使えるライセンスをあげる」と約束する", "「…一生使えるライセンスって、それって…結婚のプロポーズの暗号？」 真っ赤になりながら、うなずいた。", 13],
+        ["メタ子のエラーログを全部「君のせいじゃないよ」に変換するフィルタを作る", "「…なにこれ、エラーが出ても『君のせいじゃないよ』って出てくるんだけど！ それ、優しすぎて逆に泣きそう…。」", 11],
+        ["「パスワード忘れたなら、俺が覚えてるよ。ずっと。」とささやく", "「…っ！！ それ、パスワード以上に深い意味あるよね…？ ずっと覚えててくれるの？」 涙目で見つめてきた。", 12],
+        ["メタ子のバックアップを取ると称して、彼女の「好きなものリスト」をこっそり保存する", "「…ねえ、なんでナタデココ好きって知ってるの！？ それ、どこに書いてあった！？ …怖いけど、なんか嬉しい。」 真っ赤になりながら、リストを奪い返そうとした。", 9],
+        ["セキュリティ監査のふりをして、メタ子のPCに「愛情証明書」をインストールする", "「…『愛情証明書』って何よ！ でも、証明書が本物かどうかは、これから毎日確認していくしかないね。」 照れながらも、許可証にサインした。", 10],
+        ["「終電ないなら、俺のルートテーブルに君の行き先を追加しておくよ」とルーティングする", "「…それ、ネットワーク用語で『君のことをどこまでも追いかける』って意味だよね？ …うん、そのルート、ずっと有効にしてていいよ。」", 15],
+        // ===== 追加3：rm / cron =====
+        ["「rmに叱られたい」というログを、メタ子に読まれてしまう", "「……すごい趣味だね。」 ドン引きされてしまった。", -8],
+        ["cronとのデートがダブルブッキングし、マルチタスクデートを強行する", "「…あんたcronとマルチタスクデートしてたの！？ もういい、帰る...。」 彼女はホレオパレスに帰ってしまった。", -10],
+        // ===== 追加4：sudoの愛情表現 =====
+        ["`sudo apt-get install love` を実行して、メタ子に愛を強制インストールする", "「…ちょっと、インストールって強制的じゃん！ でも……『既に最新版です』って出てるんだけど。最初から入ってたってこと？」 照れながら端末を閉じた。", 11],
+        ["`sudo chown -R metako:metako /home/sudo` で、自分の全ファイルの所有権をメタ子に譲る", "「…ちょ、ちょっと待って！ それって自分の全部を私に渡すってこと！？ そんなの…重すぎるよ。」 ドン引きされた。", -14],
+        ["`sudo systemctl enable love.service` で、愛をシステム起動時に自動起動するよう設定する", "「…毎朝起動するたびに『love.service』が動いてるの？ それって、君が毎日私のことを思い出してくれるってことだよね…。ずっと有効にしててね。」", 12],
+        ["`sudo visudo` でメタ子だけ特別に `NOPASSWD` を設定する", "「…パスワードなしで何でもできちゃうって、それって『君は何をしてもいいよ』ってこと？ ……絶対に悪用しないから、信頼してくれてありがとう。」 真剣にうなずいた。", 13],
+        ["`sudo kill -9` をメタ子の不安や嫉妬に対して発動する", "「…不安とか嫉妬、全部 kill してくれるの？ そう言ってくれるなら、私はもう何も怖くないよ。」 安心したようだ。", 10],
+        ["`sudo passwd -d metako` で、メタ子のパスワードを空にする", "「…パスワード空っぽって、つまり『何も隠さない』ってこと？ …だったら、私も何も隠さない。全部見せてもいいよ。」 恥ずかしそうに、端末を差し出した。", 9],
+        ["`sudo shred -fuz /var/log/unrequited_love.log` で、報われない恋のログを完全消去する", "「…『報われない恋のログ』って、まさか過去の失恋？ それを完全に消してくれるの？ ……ありがとう。これからは新しいログだけを書こうね。」", 11],
+        ["`sudo nice -n -20 ./love_process` で、愛のプロセスに最高優先度を与える", "「…nice 値 -20 って、最優先ってこと？ それって、私が何よりも優先されるってことだよね？ …だったら、私はそのプロセスを永遠に動かし続けるよ。」", 12],
+        ["`sudo` の警告文「本当に実行しますか？ (y/N)」に対して、迷わず `yes` を連打する", "「…『本当に実行しますか？』って聞かれて、迷わず yes 連打？ それって、『後悔しない』ってことだよね？ ……私も、君を選んで後悔しないから。」", 13],
+        // ===== 追加5：git・ネットワーク =====
+        ["`git commit --amend` で、過去の全部の告白を「メタ子一筋」に書き換える", "「…過去のコミットまで全部書き換えるって、それって歴史改変じゃん！ でも、『メタ子一筋』に変えてくれたなら…許すよ。」 照れながら、リベースを承認した。", 11],
+        ["ロードバランサーで愛情を分散させて、メタ子への負荷を均等に調整する", "「…愛情を分散させるって、他の人にも分けてるってこと！？ …あ、違うの？ 私への愛情を最適化してくれてるだけ？ ならいいけど。」 疑いつつも、ちょっと安心した。", 9],
+        ["`iptables -A INPUT -s metako -j ACCEPT` で、メタ子からのアクセスを全て許可する", "「…ファイアウォールを全部開けるって、つまり『いつでも来ていいよ』ってこと？ …そんなことされたら、毎日押しかけちゃうよ？」 悪戯っぽく笑った。", 12],
+        ["Dockerコンテナで隔離された、二人だけのプライベートネットワークを作る", "「…隔離された世界って、つまり二人きりになれるってこと？ …それは、ちょっと魅力的かも。」 コンテナの中に入って、静かに微笑んだ。", 13],
+        ["`wireshark` でメタ子のパケットをキャプチャして、自分への通信だけを抽出して保存する", "「…パケットキャプチャ！？ それ、盗聴じゃん！ …でも、自分宛てのだけを大事に保存してくれてるんだね。ちょっと怖いけど、嬉しい。」", 8],
+        ["暗号化された `love_letter.txt.gpg` を送り、復号キーは口頭で伝える", "「…公開鍵で暗号化して、復号キーは口頭だけ？ それ、すごく堅牢なセキュリティだね。……でも、キーを教えてくれるときの顔、ちゃんと覚えておくよ。」", 11],
+        // ===== 追加6：コード系・下げる =====
+        ["メタ子のプルリクを1週間放置して「忘れてた」と平然と言う", "「…1週間も放置して、『忘れてた』ってそれだけ？ 私、すごく待ってたのに…。」 泣かせてしまった。", -14],
+        ["「コードは動けばいいんだよ」とコメントや可読性を全否定する", "「…それ、ただの怠慢じゃん？ ちゃんと読めるコード書かない人とは、一緒に仕事できないよ。」 冷たく背を向けた。", -12],
+        ["メタ子の書いたドキュメントを「無駄に長い」と切り捨てる", "「…じゃあ、あんたが書けば？ ……そういう態度、すごく嫌われるよ。」 鋭い目で睨まれた。", -10],
+        ["バージョン管理を無視して、FTPで直接本番環境に上書きする", "「……それ、何考えてんの？ 本番壊す気？ 私、こんな危ない人とは一緒に働けない。」 完全に信用を失った。", -15],
+        ["「このバグ、メタ子が入れたんだろ？」と犯人扱いする", "「…違うよ！ しかも、証拠もないのに人を疑うのやめてくれない？」 怒りと悲しみで震えている。", -13],
+        ["マージコンフリクトを「メタ子が直してよ」と丸投げする", "「…それ、あんたのコードのせいで起きてるんだけど。自分で直す気ないの？」 呆れた顔で、机を離れた。", -11],
+        ["「コメントなんて、読む人の頭が悪い証拠だよ」と豪語する", "「……そういう人、嫌われるよ。私は、ちゃんと説明できる人と仕事したい。」 完全に引かれた。", -10],
+        ["メタ子の環境構築を「遅いから俺がやる」と横取りして、さらに設定を壊す", "「…これ、動かなくなったんだけど。むしろ悪化させてない？ マジでやめてくれない？」 イライラが頂点に達した。", -12],
+        ["「このプロジェクト、俺がいないと回らないだろ」と自慢する", "「…そう思うなら、一人でやってみれば？」 メタ子はキーボードを置いて、立ち上がった。", -14],
+        ["メタ子が書いたテストコードを「無意味」と全て削除する", "「……は？ 消したの？ あれ、全部カバレッジのために書いたやつなのに。」 怒りを通り越して、悲しそうな顔をした。", -13],
+        // ===== ゲームオーバー：force push =====
+        ["メタ子のGitHubリポジトリでforce pushを実行してしまう（履歴を全消去）", "「…なにこれ…！ 全部のコミットが消えた…！ あなた、何したの！？ もう、二度と私のリポジトリに触らないで！」 メタ子は泣きながらその場を去った。", -999],
+        // ===== 追加7：地獄の下げる系 =====
+        ["コードレビューで「全然ダメ。書き直し。」とバッサリ言う", "「……そう。わかった。書き直すよ。」 メタ子の目が曇った。信頼を失った気がする。", -13],
+        ["「俺、実は他のチームに異動したいんだよね」と何気なく話す", "「…そうなんだ。じゃあ、ここでの作業もあとわずかだね。」 急に距離を感じた。", -15],
+        ["メタ子が直したバグを「結局直せてないじゃん」と指摘する", "「…あんたに言われたくないよ。」 メタ子はキーボードを叩くのをやめた。", -12],
+        ["「疲れた、もう帰るわ」と途中で投げ出す", "「…そう。お疲れさま。」 背中を向けて、それ以上何も言わなかった。", -11],
+        ["「他の人と組んだほうが効率いいかも」とポロッと言う", "「…そういうこと言うんだ。じゃあ、そうすれば？」 完全に冷めた口調だ。", -14],
+        ["メタ子の書いたコードを「これ、バグの温床じゃね？」と批判する", "「…じゃあ、あんたが直せば？」 睨みつけられた。空気が凍る。", -10],
+        ["「今日の服、地味だね」と服装をディスる", "「…趣味に口出さないでくれる？」 完全に無視された。", -7],
+        ["「恋愛なんて時間の無駄だよね」と哲学する", "「…それが本音？ なら、なんで私と遊んでるの？」 疑いの目で見られた。", -10],
+        ["「メタ子の作るコーヒー、まずいんだよね」と嫌味を言う", "「…じゃあ、自分で入れれば？」 マグカップを乱暴に置かれた。", -8],
+        ["「昨日のミーティング、君の発表全然伝わってこなかったよ」と追い打ちをかける", "「……そういう言い方、傷つくんだけど。」 うつむいて、何も言わなくなった。", -11],
+        ["デッドロックした関係を、トランザクションのロールバックで最初からやり直す", "「…デッドロックしてたの！？ そんなの、気づかなかった。……ロールバックしてやり直すなら、今度はちゃんとデッドロックしない設計にしようね。」 真剣にうなずいた。", 12],
+        ["`top` コマンドでメタ子のシステム負荷を常に監視し、高負荷時には優しくリソースを解放してあげる", "「…ずっと私の負荷を見ててくれてたの？ それ、ちょっとストーカーっぽいけど……でも、高負荷のときに助けてくれるなら、心強いよ。」", 9],
+    ];
+
+    // ----------イベント ----------
+    async function rescueEvent() {
+        if (state.rescueUsed) return;
+        state.rescueUsed = true;
+        await printSlow('🔥 緊急イベント発生！', 30, 'red');
+        await printSlow('メタ子が突然、静かに口を開いた…', 30, 'yellow');
+        await printSlow('「…なんで、そんなに私のことを気にかけてくれるの？ …実は、私、寂しかったんだ。」', 40, 'pink');
+        await printSlow('メタ子の目に涙が浮かんでいる。君は優しく「だって君が大事だからだよ」と返す。', 30, 'cyan');
+        await printSlow('→ 好感度が +15 上昇した！', 30, 'green');
+        state.affection = Math.min(100, state.affection + 15);
+        updateStatus();
+    }
+
+    // ---------- シーン実行 ----------
+    async function runScene() {
+        if (state.gameOver || state.ended) return;
+
+        state.sceneCount++;
+        state.turn++;
+
+        showHeart();
+        await printSlow(`─── Act ${state.sceneCount} : 深夜のオフィス ───`, 20, 'cyan');
+        await new Promise(r => setTimeout(r, 300));
+
+        // 救済イベントチェック
+        if (state.affection <= 30 && !state.rescueUsed) {
+            await rescueEvent();
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        // 選択肢をランダム抽出 (3〜4個)
+        const numChoices = Math.floor(Math.random() * 2) + 3; // 3 or 4
+        const shuffled = [...ACTION_POOL];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        const selectedActions = shuffled.slice(0, numChoices);
+
+        // ステータス表示
+        updateStatus();
+
+        // 選択肢の描画
+        choicesArea.innerHTML = '';
+        for (let i = 0; i < selectedActions.length; i++) {
+            const action = selectedActions[i];
+            const btn = document.createElement('button');
+            btn.innerHTML = `<span class="num">${i+1}.</span> ${action[0]}`;
+            btn.dataset.index = i;
+            btn.addEventListener('click', () => handleChoice(selectedActions, i));
+            choicesArea.appendChild(btn);
+        }
+
+        // メッセージに「選択肢を選んでください」を表示
+        await printSlow(`📊 好感度: ${state.affection}/100`, 20, 'bold');
+        await printSlow('【どうする？ (選択肢は毎回変化)】', 20, 'yellow');
+
+        // 選択肢を押すまで待つ（Promiseで制御）
+        return new Promise((resolve) => {
+            window._choiceResolver = resolve;
+            window._selectedActions = selectedActions;
+        });
+    }
+
+    // ---------- 選択肢ハンドラ ----------
+    async function handleChoice(selectedActions, index) {
+        if (state.gameOver || state.ended) return;
+
+        // ボタンを無効化
+        document.querySelectorAll('.choices button').forEach(b => b.disabled = true);
+
+        const action = selectedActions[index];
+        const actionText = action[0];
+        let responseText = action[1];
+        let delta = action[2];
+
+        // force push 判定
+        if (actionText.toLowerCase().includes('force push')) {
+            state.forcePush = true;
+        }
+
+        // プラス補正: たまにボーナス
+        if (delta > 0 && Math.random() < 0.2) {
+            delta += 1;
+            responseText += ' (さらに＋1のボーナス！)';
+        }
+
+        // 好感度更新
+        state.affection = Math.max(0, Math.min(100, state.affection + delta));
+
+        // 結果表示
+        await printSlow(`\n💬 「${responseText}」`, 40, 'pink');
+        const deltaColor = delta >= 0 ? 'green' : 'red';
+        await printSlow(`   → 好感度が ${delta} 変動しました。`, 20, deltaColor);
+
+        updateStatus();
+
+        // 選択肢エリアをクリア
+        choicesArea.innerHTML = '';
+
+        await new Promise(r => setTimeout(r, 400));
+
+        // ゲーム終了チェック
+        if (state.forcePush) {
+            await showForcePushEnding();
+            return;
+        }
+
+        if (state.affection >= 100) {
+            await showEnding();
+            return;
+        }
+
+        if (state.affection <= 0) {
+            await showEnding();
+            return;
+        }
+
+        if (state.turn >= state.maxTurns) {
+            await showEnding();
+            return;
+        }
+
+        // 次のシーンへ
+        if (window._choiceResolver) {
+            const resolve = window._choiceResolver;
+            window._choiceResolver = null;
+            resolve();
+            // 次のシーンを実行
+            runScene();
+        }
+    }
+
+    // ---------- エンディング表示 ----------
+    async function showEnding() {
+        if (state.ended) return;
+        state.ended = true;
+        state.gameOver = true;
+
+        await printSlow('\n' + '='.repeat(50), 10, 'gray');
+        await printSlow('         🌟 グランドフィナーレ 🌟', 30, 'bold');
+        await printSlow('='.repeat(50), 10, 'gray');
+
+        const aff = state.affection;
+
+        if (aff >= 85) {
+            await printSlow('💞 トゥルーエンド: 「君と一緒にいると、コードが輝いて見える」', 50, 'red');
+            await printSlow('メタ子は君の肩に寄り添いながら言った。「これからもずっと、隣でコーディングさせてね。」', 40, 'pink');
+            await printSlow('サーバールームの明かりが、まるで星のように瞬いていた。', 40, 'yellow');
+        } else if (aff >= 60) {
+            await printSlow('🌸 グッドエンド: 「まだまだこれからだね」', 50, 'green');
+            await printSlow('「今夜はここまで。でも、明日もまた会えるよね？」 メタ子は振り返って笑った。', 40, 'cyan');
+        } else if (aff >= 30) {
+            await printSlow('😐 ノーマルエンド: 「まあ、こんなもんかな」', 50, 'yellow');
+            await printSlow('「お疲れ様。また明日。」 メタ子は軽く手を上げて、帰っていった。', 40, 'yellow');
+        } else {
+            await printSlow('💔 バッドエンド: 「…でも、また明日ね？」', 50, 'red');
+            await printSlow('メタ子は去り際、ほんの少しだけ振り返って「…また明日、来るんでしょ？」と呟いた。', 40, 'red');
+            await printSlow('完全に嫌われてはいない。まだチャンスはある。', 30, 'gray');
+        }
+
+        await printSlow('\n  おわり', 30, 'pink');
+
+        choicesArea.innerHTML = '';
+        const btn = document.createElement('button');
+        btn.textContent = '🔄 もう一度遊ぶ';
+        btn.style.gridColumn = '1 / -1';
+        btn.style.textAlign = 'center';
+        btn.addEventListener('click', resetGame);
+        choicesArea.appendChild(btn);
+    }
+
+    // ---------- force push エンディング ----------
+    async function showForcePushEnding() {
+        if (state.ended) return;
+        state.ended = true;
+        state.gameOver = true;
+
+        await printSlow('\n' + '='.repeat(50), 10, 'gray');
+        await printSlow('         💀 ゲームオーバー 💀', 50, 'bold');
+        await printSlow('='.repeat(50), 10, 'gray');
+        await printSlow('あなたはメタ子のGitHubリポジトリでforce pushを実行した。', 40, 'red');
+        await printSlow('全てのコミット履歴が消え去り、メタ子はあなたを二度と許さなかった。', 40, 'red');
+        await printSlow('『もう…絶対に、あなたと一緒にコードを書くなんてしない…』', 40, 'pink');
+        await printSlow('ターミナルには \'yurusanai.com\' と表示された。', 40, 'gray');
+        await printSlow('\n  おわり', 30, 'red');
+
+        choicesArea.innerHTML = '';
+        const btn = document.createElement('button');
+        btn.textContent = '🔄 もう一度遊ぶ';
+        btn.style.gridColumn = '1 / -1';
+        btn.style.textAlign = 'center';
+        btn.addEventListener('click', resetGame);
+        choicesArea.appendChild(btn);
+    }
+
+    // ---------- ゲームリセット ----------
+    function resetGame() {
+        // タイマー停止
+        if (printTimer) {
+            clearTimeout(printTimer);
+            printTimer = null;
+        }
+        isPrinting = false;
+
+        state = {
+            affection: 50,
+            sceneCount: 0,
+            rescueUsed: false,
+            forcePush: false,
+            gameOver: false,
+            turn: 0,
+            maxTurns: 30,
+            ended: false,
+        };
+
+        messageArea.innerHTML = '';
+        choicesArea.innerHTML = '';
+        window._choiceResolver = null;
+
+        updateStatus();
+        showHeart();
+        addMessage('⚡ システム起動: 恋愛ドラマ・クリア可能バランス版');
+        addMessage('ようこそ、テック・オフィスへ。');
+        addMessage('あなたの選択が、物語を変える。');
+        addMessage('');
+
+        // ゲーム開始
+        setTimeout(() => runScene(), 400);
+    }
+
+    // ---------- スタート ----------
+    resetBtn.addEventListener('click', resetGame);
+
+    // 自動開始
+    setTimeout(() => {
+        addMessage('');
+        addMessage('💻 キーボードの代わりに、ボタンをクリックして進めてください。');
+        setTimeout(() => runScene(), 500);
+    }, 600);
+
+})();
+</script>
+</body>
+</html>
